@@ -1,0 +1,23 @@
+# Git commands to push your project to GitHub
+
+# 1. Initialize git repository (if not already done)
+git init
+
+# 2. Add your GitHub repository as remote origin
+git remote add origin https://github.com/joinquit3110/STB_TAD.git
+
+# 3. Add all files to staging
+git add .
+
+# 4. Create initial commit
+git commit -m "Initial commit: STB_TAD project with Step A-D implementation"
+
+# 5. Set the main branch (if needed)
+git branch -M main
+
+# 6. Push to GitHub
+git push -u origin main
+
+# If you encounter any issues with the push, you might need to:
+# - Set up your Git credentials
+# - Or use: git push --force origin main (be careful with --force)

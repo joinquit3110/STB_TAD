@@ -128,6 +128,7 @@ export const StepD: React.FC = () => {
         <RawTable 
           editable={true} 
           data={editableRawData}
+          showEditInstructions={false}
           onValueChange={(updatedData) => {
             // Cập nhật dữ liệu gốc có thể chỉnh sửa
             updateEditableRawData(updatedData);

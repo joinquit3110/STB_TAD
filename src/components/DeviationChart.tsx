@@ -99,7 +99,6 @@ export const DeviationChart: React.FC<DeviationChartProps> = ({ groupData }) => 
               <th className="table-header"><MathComponent>{MathSymbols.groupMean}</MathComponent></th>
               <th className="table-header"><MathComponent>{MathSymbols.midpoint}</MathComponent></th>
               <th className="table-header"><MathComponent>{"|\\bar{x}_i - c_i|"}</MathComponent></th>
-              <th className="table-header">Nhận xét</th>
             </tr>
           </thead>
           <tbody>
@@ -123,15 +122,6 @@ export const DeviationChart: React.FC<DeviationChartProps> = ({ groupData }) => 
                   }`}>
                     {formatVietnameseNumber(data.deviation, 2)}
                   </span>
-                </td>
-                <td className="table-cell text-sm">
-                  {data.deviation < 1 ? (
-                    <span className="text-success-600">Rất gần</span>
-                  ) : data.deviation < 3 ? (
-                    <span className="text-warning-600">Khá gần</span>
-                  ) : (
-                    <span className="text-red-600">Khác biệt</span>
-                  )}
                 </td>
               </motion.tr>
             ))}

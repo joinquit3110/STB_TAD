@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { GroupData } from '../data/rawData';
-import { initialGroupData, calculateOverallMean, rawData, originalRawData, calculateRawDataMean, calculateGroupMean } from '../data/rawData';
+import { initialGroupData, calculateOverallMean, rawData, originalRawData, calculateRawDataMean, calculateGroupMean, calculateStepDMean } from '../data/rawData';
 
 export interface AppState {
   // Current step (0-4)
@@ -314,9 +314,19 @@ export const useAppStore = create<AppState>()(
         // Cập nhật store với dữ liệu StepD mới và raw data mean
         set({
           stepDGroupData: stepDGroups,
-          stepDMean: calculateOverallMean(stepDGroups),
+          stepDMean: calculateStepDMean(stepDGroups),
           rawDataMean: calculateRawDataMean(editableData)
         });
+      },
+      
+      updateEditableRawData: (newData: number[]) => {
+        set({
+          editableRawData: newData,
+          rawDataMean: calculateRawDataMean(newData)
+        });
+        
+        // Recalculate groups after updating raw data
+        get().recalculateAllGroups();
       },
       
       resetRawData: () => {
@@ -331,13 +341,6 @@ export const useAppStore = create<AppState>()(
         
         // Tính toán lại dữ liệu cho StepD
         get().recalculateAllGroups();
-      },
-      
-      updateEditableRawData: (newData: number[]) => {
-        set({
-          editableRawData: newData,
-          rawDataMean: calculateRawDataMean(newData)
-        });
       },
 
       resetLesson: () => {
@@ -370,13 +373,12 @@ export const useAppStore = create<AppState>()(
         return groupData.every(group => {
           const actualFrequency = group.values?.length || 0;
           const actualSum = group.values?.reduce((acc, val) => acc + val, 0) || 0;
-          const actualMean = actualFrequency > 0 ? actualSum / actualFrequency : 0;
           
-          // Check if student has entered correct values manually
+          // Check if student has entered correct values manually for frequency and sum
+          // Mean validation is now done in Step B
           return (
             group.manualFrequency === actualFrequency && actualFrequency > 0 &&
-            group.manualSum === actualSum && actualSum > 0 &&
-            group.manualMean !== undefined && Math.abs(group.manualMean - actualMean) < 0.01 && actualMean > 0
+            group.manualSum === actualSum && actualSum > 0
           );
         });
       },

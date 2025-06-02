@@ -7,7 +7,7 @@ import { useAppStore } from '../store/useAppStore';
 import { DeviationChart } from '../components/DeviationChart';
 
 export const StepB: React.FC = () => {
-  const { groupData, isStepAComplete, updateManualMidpoint, updateManualDeviation } = useAppStore();
+  const { groupData, isStepAComplete, updateManualMidpoint, updateManualDeviation, updateManualMean } = useAppStore();
 
   // Check if Step A is complete
   const allGroupsCompleted = isStepAComplete();
@@ -32,12 +32,33 @@ export const StepB: React.FC = () => {
   const handleDeviationChange = (groupIndex: number, newDeviation: number) => {
     updateManualDeviation(groupIndex, newDeviation);
   };
+  
+  // Handler for mean changes (moved from Step A)
+  const handleMeanChange = (groupIndex: number, newMean: number) => {
+    updateManualMean(groupIndex, newMean);
+  };
+  
+  // Validation function for mean (moved from Step A)
+  const validateMean = (groupIndex: number, inputMean: number): 'correct' | 'in-progress' | 'incorrect' => {
+    const group = groupData[groupIndex];
+    const actualSum = group.values?.reduce((acc, val) => acc + val, 0) || 0;
+    const actualCount = group.values?.length || 0;
+    const actualMean = actualCount > 0 ? actualSum / actualCount : 0;
+    
+    if (Math.abs(inputMean - actualMean) < 0.01 && actualMean > 0) {
+      return 'correct';
+    } else if (inputMean === 0 && actualMean === 0) {
+      return 'in-progress';
+    } else {
+      return 'incorrect';
+    }
+  };
   // Validation function for deviation
   const validateDeviation = (groupIndex: number, inputDeviation: number): 'correct' | 'in-progress' | 'incorrect' => {
     const group = groupData[groupIndex];
-    if (!group.manualMidpoint || !group.mean) return 'in-progress';
+    if (!group.manualMidpoint || !group.manualMean) return 'in-progress';
     
-    const expectedDeviation = Math.abs(group.mean - group.manualMidpoint);
+    const expectedDeviation = Math.abs(group.manualMean - group.manualMidpoint);
     
     if (Math.abs(inputDeviation - expectedDeviation) < 0.01 && inputDeviation >= 0) {
       return 'correct';
@@ -48,7 +69,7 @@ export const StepB: React.FC = () => {
     }
   };
   // Check if all midpoints are correctly entered
-  const isStepBComplete = () => {
+  const areMidpointsComplete = () => {
     return groupData.every(group => {
       const expectedMidpoint = (group.lowerBound + group.upperBound) / 2;
       return group.manualMidpoint !== undefined && 
@@ -56,12 +77,34 @@ export const StepB: React.FC = () => {
              expectedMidpoint > 0;
     });
   };
+  
+  // Check if all means and midpoints are correctly entered
+  const isStepBComplete = () => {
+    return groupData.every(group => {
+      // Check midpoint calculation
+      const expectedMidpoint = (group.lowerBound + group.upperBound) / 2;
+      const midpointCorrect = group.manualMidpoint !== undefined && 
+                             Math.abs(group.manualMidpoint - expectedMidpoint) < 0.01 && 
+                             expectedMidpoint > 0;
+      
+      // Check mean calculation (moved from Step A)
+      const actualSum = group.values?.reduce((acc, val) => acc + val, 0) || 0;
+      const actualCount = group.values?.length || 0;
+      const actualMean = actualCount > 0 ? actualSum / actualCount : 0;
+      const meanCorrect = group.manualMean !== undefined && 
+                         Math.abs(group.manualMean - actualMean) < 0.01 && 
+                         actualMean > 0;
+      
+      return midpointCorrect && meanCorrect;
+    });
+  };
+  const midpointsComplete = areMidpointsComplete();
   const stepBComplete = isStepBComplete();
   // Check if all deviations are correctly entered
   const isDeviationComplete = () => {
     return groupData.every(group => {
-      if (!group.manualMidpoint || !group.mean) return false;
-      const expectedDeviation = Math.abs(group.mean - group.manualMidpoint);
+      if (!group.manualMidpoint || !group.manualMean) return false;
+      const expectedDeviation = Math.abs(group.manualMean - group.manualMidpoint);
       return group.manualDeviation !== undefined && 
              Math.abs(group.manualDeviation - expectedDeviation) < 0.01;
     });
@@ -78,7 +121,7 @@ export const StepB: React.FC = () => {
         className="card bg-white border-2 border-dashed border-cyan-300"
       >
         <h3 className="text-lg font-bold text-cyan-800 mb-4 text-center">
-          🧮 Giá trị đại diện        </h3>          <div className="text-center mb-4 text-gray-700">          <p>Hãy tính và nhập giá trị đại diện cho mỗi nhóm <MathComponent>{"[a_i;b_i)"}</MathComponent></p>
+          🧮 Giá trị đại diện c_i        </h3>          <div className="text-center mb-4 text-gray-700">          <p>Hãy tính và nhập giá trị đại diện c_i cho mỗi nhóm <MathComponent>{"[a_i;b_i)"}</MathComponent></p>
           <div className="bg-cyan-50 p-3 rounded-lg mt-2 shadow-inner">
             <MathComponent display>{MathFormulas.midpoint}</MathComponent>
             <p className="text-sm text-cyan-800 mt-2">Giá trị đại diện là điểm giữa của mỗi nhóm</p>
@@ -129,7 +172,7 @@ export const StepB: React.FC = () => {
             )
           })}        </div>
       </motion.div>      {/* Data Table with Comparison - Only show when all midpoint values are correct */}
-      {allGroupsCompleted && stepBComplete && (
+      {allGroupsCompleted && midpointsComplete && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -137,23 +180,25 @@ export const StepB: React.FC = () => {
           className="mb-6"
         >
           <h3 className="text-xl font-bold mb-4 text-primary-700 text-center">
-            Bảng 5.9b - Bảng tần số ghép nhóm chiều dài của lá
+            Bảng 5.9b - Bảng tần số ghép nhóm với c_i và x_i
           </h3>
           <GroupTable
             groupData={groupData.map(group => ({
               ...group,
-              // For Step B table, use manual values from Step A and calculated midpoints from Step B
-              sum: group.manualSum !== undefined ? group.manualSum : group.sum,
-              mean: group.manualMean !== undefined ? group.manualMean : group.mean,
-              midpoint: group.manualMidpoint !== undefined ? group.manualMidpoint : (group.lowerBound + group.upperBound) / 2
+              midpoint: group.manualMidpoint !== undefined ? group.manualMidpoint : (group.lowerBound + group.upperBound) / 2,
+              // Use manualMean for the mean property to ensure the deviation calculation works properly
+              mean: group.manualMean
             }))}
             showFrequency={true}
             showSum={true}
             showMeans={true}
             showMidpoints={true}
             showDeviation={true}
+            editableMeans={true}
             editableDeviation={true}
+            onMeanChange={handleMeanChange}
             onDeviationChange={handleDeviationChange}
+            validateMean={validateMean}
             validateDeviation={validateDeviation}
           />
         </motion.div>
@@ -198,7 +243,7 @@ export const StepB: React.FC = () => {
           </p>
         </motion.div>
       )}      {/* Call to action - Step B incomplete */}
-      {allGroupsCompleted && !stepBComplete && (
+      {allGroupsCompleted && midpointsComplete && !stepBComplete && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -207,9 +252,9 @@ export const StepB: React.FC = () => {
           <div className="text-center">
             <div className="text-4xl mb-2">📝</div>
             <h3 className="text-xl font-bold text-yellow-800 mb-2">
-              Hoàn thành tính giá trị đại diện
+              Hoàn thiện nhập dữ liệu vào bảng
             </h3>            <p className="text-yellow-700">
-              Hãy tính và nhập đúng giá trị đại diện <MathComponent>{MathSymbols.midpoint}</MathComponent> cho tất cả các nhóm
+              Hãy tính và nhập đúng giá trị trung bình <MathComponent>{"x_i"}</MathComponent> và giá trị đại diện <MathComponent>{MathSymbols.midpoint}</MathComponent> cho tất cả các nhóm
             </p>
           </div>
         </motion.div>

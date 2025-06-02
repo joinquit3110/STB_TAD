@@ -13,7 +13,6 @@ export const StepA: React.FC = () => {
     removeValueFromGroup,
     draggedValue,
     setDraggedValue,
-    updateManualMean,
     updateManualFrequency,
     updateManualSum
   } = useAppStore();
@@ -69,33 +68,19 @@ export const StepA: React.FC = () => {
     }
   };
 
-  const validateMean = (groupIndex: number, inputMean: number): 'correct' | 'in-progress' | 'incorrect' => {
-    const group = groupData[groupIndex];
-    const actualSum = group.values?.reduce((acc, val) => acc + val, 0) || 0;
-    const actualCount = group.values?.length || 0;
-    const actualMean = actualCount > 0 ? actualSum / actualCount : 0;
-    
-    if (Math.abs(inputMean - actualMean) < 0.01 && actualMean > 0) {
-      return 'correct';
-    } else if (inputMean === 0 && actualMean === 0) {
-      return 'in-progress';
-    } else {
-      return 'incorrect';
-    }
-  };
+  // Mean validation moved to Step B
 
   // Check if all groups have correct values entered manually
   const isTableCompleteAndCorrect = () => {
     return groupData.every(group => {
       const actualFrequency = group.values?.length || 0;
       const actualSum = group.values?.reduce((acc, val) => acc + val, 0) || 0;
-      const actualMean = actualFrequency > 0 ? actualSum / actualFrequency : 0;
       
       // Check if student has entered correct values manually using manual fields
+      // Note: Mean validation is now done in Step B
       return (
         group.manualFrequency === actualFrequency && actualFrequency > 0 &&
-        group.manualSum === actualSum && actualSum > 0 &&
-        group.manualMean !== undefined && Math.abs(group.manualMean - actualMean) < 0.01 && actualMean > 0
+        group.manualSum === actualSum && actualSum > 0
       );
     });
   };
@@ -110,9 +95,6 @@ export const StepA: React.FC = () => {
     updateManualSum(groupIndex, newSum);
   };
 
-  const handleMeanChange = (groupIndex: number, newMean: number) => {
-    updateManualMean(groupIndex, newMean);
-  };
   return (
     <div className="space-y-6">
       {/* Raw Data Table */}
@@ -126,19 +108,17 @@ export const StepA: React.FC = () => {
       <GroupTable
         groupData={groupData}
         onValueRemove={removeValueFromGroup}
-        showMeans={true}
+        showMeans={false}
         showFrequency={true}
         showSum={true}
         editableFrequency={true}
         editableSum={true}
-        editableMeans={true}
+        editableMeans={false}
         onFrequencyChange={handleFrequencyChange}
         onSumChange={handleSumChange}
-        onMeanChange={handleMeanChange}
         onGroupClick={handleGroupClick}
         validateFrequency={validateFrequency}
         validateSum={validateSum}
-        validateMean={validateMean}
       />
 
       {/* Completion Status */}

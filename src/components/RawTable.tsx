@@ -12,6 +12,7 @@ interface RawTableProps {
   data?: number[];
   onEditComplete?: () => void;
   onValueChange?: (updatedData: number[]) => void;
+  showEditInstructions?: boolean;
 }
 
 export const RawTable: React.FC<RawTableProps> = ({ 
@@ -22,7 +23,8 @@ export const RawTable: React.FC<RawTableProps> = ({
   editable = false,
   data = rawData,
   onEditComplete,
-  onValueChange
+  onValueChange,
+  showEditInstructions = true
 }) => {
   const { calculateMeans } = useAppStore();
   const [editingCell, setEditingCell] = useState<{rowIndex: number, colIndex: number} | null>(null);
@@ -159,9 +161,11 @@ export const RawTable: React.FC<RawTableProps> = ({
                             autoFocus
                             step="any"
                           />
-                          <div className="absolute text-xs text-gray-500 -bottom-5 left-0 right-0 text-center bg-white py-1 rounded-b-md shadow-sm">
-                            <span className="font-medium">Enter</span> để lưu, <span className="font-medium">ESC</span> để hủy
-                          </div>
+                          {showEditInstructions && (
+                            <div className="absolute text-xs text-gray-500 -bottom-5 left-0 right-0 text-center bg-white py-1 rounded-b-md shadow-sm">
+                              <span className="font-medium">Enter</span> để lưu, <span className="font-medium">ESC</span> để hủy
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className={`py-1.5 ${editable ? 'hover:text-blue-700 hover:font-medium' : ''}`}>

@@ -101,7 +101,18 @@ export const calculateMidpointMean = (groups: GroupData[]): number => {
   
   const totalFrequency = groups.reduce((acc, group) => acc + group.frequency, 0);
   
-  return totalWeightedSum / totalFrequency;
+  return totalFrequency > 0 ? totalWeightedSum / totalFrequency : 0;
+};
+
+// Special calculation for Step D using midpoints for grouped data
+export const calculateStepDMean = (groups: GroupData[]): number => {
+  const totalWeightedSum = groups.reduce((acc, group) => {
+    return acc + (group.midpoint || 0) * group.frequency;
+  }, 0);
+  
+  const totalFrequency = groups.reduce((acc, group) => acc + group.frequency, 0);
+  
+  return totalFrequency > 0 ? totalWeightedSum / totalFrequency : 0;
 };
 
 // Dữ liệu bài tập phụ - Cân nặng học sinh

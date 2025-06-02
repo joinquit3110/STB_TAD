@@ -9,7 +9,7 @@ import { useAppStore } from './store/useAppStore';
 import { Math as MathComponent } from './components/Math';
 
 const stepTitles = [
-  <>Phân loại và tính <MathComponent>{"\\bar{x}_i"}</MathComponent></>,
+  <>Phân loại và tính </>,
   <>So sánh <MathComponent>{"\\bar{x}_i"}</MathComponent> và <MathComponent>{"c_i"}</MathComponent></>, 
   <>Tính trung bình <MathComponent>{"\\bar{x}"}</MathComponent></>,
   "Giá trị đại diện",
